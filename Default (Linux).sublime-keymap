@@ -1,0 +1,3 @@
+[
+	{ "keys": ["ctrl+k", "ctrl+f"], "command": "insert_best_completion" }
+]
