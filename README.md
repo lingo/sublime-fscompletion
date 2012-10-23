@@ -7,9 +7,9 @@ in your source.
 
 ## Example ##
 
-/usr/sh**[COMPLETE-KEY]** should pop up with *share*
+/usr/sh **[COMPLETE-KEY]** should pop up with *share*
 
-/usr/share/**[COMPLETE-KEY]** should pop up with directory items beneath /usr/share/
+/usr/share/ **[COMPLETE-KEY]** should pop up with directory items beneath /usr/share/
 
 
 ## Licence ##
