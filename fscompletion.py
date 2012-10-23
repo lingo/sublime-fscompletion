@@ -9,6 +9,7 @@ import re
 # Test cases:
 #      /home/
 #      C:\abc
+#      c:/
 #
 
 
@@ -31,13 +32,14 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
 
         # Now strip off leading comments or whitespaces.
         lstr = re.sub(r'^[#/*]*[ \t]*', '', lstr)
-        if (lstr.find(r'\\') != -1):
-            lstr = re.sub(r'.*([a-z]:\\.*)', r'\1', lstr, flags=re.IGNORECASE)
-        elif (lstr.find('/') != -1):
+        preRepl = lstr
+        if lstr.find('\\') != -1 or lstr.find(':') != -1:
+            lstr = re.sub(r'.*([a-z]:\.*)', r'\1', lstr, re.IGNORECASE)
+        elif lstr.find('/') != -1:
             lstr = re.sub(r'[^/]*(.*)', r'\1', lstr)
         else:
             return None
-        print "linetext = %s" % lstr
+        print "FileSystemCompletion: line was '%s', replaced to '%s'" % (preRepl, lstr)
 
         # Generate completions from the path found.
         # We return tuples because this should be (label,completion)
