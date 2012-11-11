@@ -166,10 +166,10 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
             path = os.path.join(os.getcwd(), path)
 
         escaped_path = False if path.find('\\ ') == -1 else True
-        print escaped_path
+
         if escaped_path:
             path = path.replace('\\ ',' ')
-        print path
+
         matches = []
         for fname in iglob(path + '*'):
             completion = os.path.basename(fname) 
