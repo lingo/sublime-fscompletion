@@ -1,4 +1,4 @@
-import sublime_plugin
+import sublime, sublime_plugin
 
 import os
 import os.path
@@ -149,7 +149,7 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
         line = view.line(locations[0])
         # Extract the whole line's text (prefix parameter above isn't enough)
         lstr = view.substr(line)
-        lstr = lstr[0:rowcol[1] + 1]
+        lstr = lstr[0:rowcol[1]]
 
         path = scanpath(lstr)
 
@@ -199,12 +199,27 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
             # I guess the problem is that the first item in the tuple is
             # what should be replaced, but it only works on words and
             # space will break the word boundary
-            if completion.count(' ') > 1:
-                completion = completion[completion.find(' ')+1:]
+
+            # last word that will be completed (is highlighted in the box)
+            # if the last charcated is a space then it will be the whole word
+            # from the last separator
+            lastword = path[path.rfind(sep)+1:]
+
+            # difference between the completion and the lastword
+            rest = '' 
+            
+            if path[-1] != ' ':
+                lastword = lastword[lastword.rfind(' ')+1:]
+                rest = completion[completion.find(lastword):]
+            else:
+                rest = completion[completion.find(lastword)+len(lastword):]
+
+            if rest.find(' ') != -1:
+                completion = rest
 
             matches.append((text, completion))
 
-        return matches
+        return (matches, sublime.INHIBIT_WORD_COMPLETIONS)
 
 
 if __name__ == "__main__":
