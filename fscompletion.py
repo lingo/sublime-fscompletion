@@ -163,7 +163,8 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
 
         # add current directory if is missing
         if not hasroot(path):
-            path = os.path.join(os.getcwd(), path)
+            view_cwd = os.path.dirname(view.file_name())
+            path = os.path.join(view_cwd, path)
 
         escaped_path = False if path.find('\\ ') == -1 else True
 
