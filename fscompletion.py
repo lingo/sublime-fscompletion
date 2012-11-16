@@ -122,6 +122,9 @@ def scanpath(string):
 
     return rpath[::-1]
 
+def getviewcwd(view):
+    return os.path.dirname(view.file_name())
+
 activated = False
 
 class FileSystemCompTriggerCommand(sublime_plugin.TextCommand):
@@ -151,74 +154,78 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
         lstr = view.substr(line)
         lstr = lstr[0:rowcol[1]]
 
-        path = scanpath(lstr)
+        guessed_path = scanpath(lstr)
 
-        if not activated and not isexplicitpath(path):
+        if not activated and not isexplicitpath(guessed_path):
             return None
 
         activated = False
 
         # expand ~ if there is any
-        path = os.path.expanduser(path)
+        guessed_path = os.path.expanduser(guessed_path)
 
         # add current directory if is missing
-        if not hasroot(path):
-            view_cwd = os.path.dirname(view.file_name())
-            path = os.path.join(view_cwd, path)
+        if not hasroot(guessed_path):
+            guessed_path = os.path.join(getviewcwd(view), guessed_path)
 
-        escaped_path = False if path.find('\\ ') == -1 else True
+        escaped_path = False if guessed_path.find('\\ ') == -1 else True
 
         if escaped_path:
-            path = path.replace('\\ ',' ')
+            guessed_path = guessed_path.replace('\\ ',' ')
 
         matches = []
-        for fname in iglob(path + '*'):
-            completion = os.path.basename(fname) 
+        for path in (guessed_path, getviewcwd(view)+sep):
 
-            if escaped_path:
-                completion = completion.replace(' ', '\\ ')
+            if matches:
+                break
 
-            text = ''
+            for fname in iglob(path + '*'):
+                completion = os.path.basename(fname) 
 
-            if os.path.isdir(fname):
-                text = '%s/\tDir' % completion
-            else:
-                text = '%s\tFile' % completion
+                if escaped_path:
+                    completion = completion.replace(' ', '\\ ')
 
-            # FIXME:
-            # this one is a bit weird
-            # for example if there are three files:
-            # /quick test
-            # /quick test 1
-            # /quick test 2
-            # and user types 'quick' and asks for compliction
-            # he will get all three choises, so far so good,
-            # if he selects the first one, everything is fine, but
-            # if he selects the second or third, the code completin will replace
-            # /quick quick test 1
-            # /quick quick test 2
-            # I guess the problem is that the first item in the tuple is
-            # what should be replaced, but it only works on words and
-            # space will break the word boundary
+                text = ''
 
-            # last word that will be completed (is highlighted in the box)
-            # if the last charcated is a space then it will be the whole word
-            # from the last separator
-            lastword = path[path.rfind(sep)+1:]
+                if os.path.isdir(fname):
+                    text = '%s/\tDir' % completion
+                else:
+                    text = '%s\tFile' % completion
 
-            # difference between the completion and the lastword
-            rest = '' 
-            
-            if path[-1] != ' ':
-                lastword = lastword[lastword.rfind(' ')+1:]
-                rest = completion[completion.find(lastword):]
-            else:
-                rest = completion[completion.find(lastword)+len(lastword):]
+                # FIXME:
+                # this one is a bit weird
+                # for example if there are three files:
+                # /quick test
+                # /quick test 1
+                # /quick test 2
+                # and user types 'quick' and asks for compliction
+                # he will get all three choises, so far so good,
+                # if he selects the first one, everything is fine, but
+                # if he selects the second or third, the code completin will replace
+                # /quick quick test 1
+                # /quick quick test 2
+                # I guess the problem is that the first item in the tuple is
+                # what should be replaced, but it only works on words and
+                # space will break the word boundary
 
-            if rest.find(' ') != -1:
-                completion = rest
+                # last word that will be completed (is highlighted in the box)
+                # if the last charcated is a space then it will be the whole word
+                # from the last separator
+                lastword = path[path.rfind(sep)+1:]
 
-            matches.append((text, completion))
+                # difference between the completion and the lastword
+                rest = '' 
+                
+                if path[-1] != ' ':
+                    lastword = lastword[lastword.rfind(' ')+1:]
+                    rest = completion[completion.find(lastword):]
+                else:
+                    rest = completion[completion.find(lastword)+len(lastword):]
+
+                if rest.find(' ') != -1:
+                    completion = rest
+
+                matches.append((text, completion))
 
         return (matches, sublime.INHIBIT_WORD_COMPLETIONS)
 
