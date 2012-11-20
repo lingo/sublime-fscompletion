@@ -159,8 +159,6 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
         if not activated and not isexplicitpath(guessed_path):
             return None
 
-        activated = False
-
         # expand ~ if there is any
         guessed_path = os.path.expanduser(guessed_path)
 
@@ -168,67 +166,76 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
         if not hasroot(guessed_path):
             guessed_path = os.path.join(getviewcwd(view), guessed_path)
 
-        escaped_path = False if guessed_path.find('\\ ') == -1 else True
+        matches = self.get_matches(guessed_path)
 
-        if escaped_path:
-            guessed_path = guessed_path.replace('\\ ',' ')
+        # if there are no matches this means that the path does not exists in
+        # latex for example one can do \input{$cur} where $cur is the cursor
+        # position. This will scan '\input{' as a guessed_path since it is
+        # really a valid path. The glob pattern however will not match anything
+        # and thus we need to add a new one that will simply $cwd/*
+        if not matches and activated:
+            matches = self.get_matches(getviewcwd(view)+sep)
 
-        matches = []
-        for path in (guessed_path, getviewcwd(view)+sep):
-
-            if matches:
-                break
-
-            for fname in iglob(path + '*'):
-                completion = os.path.basename(fname) 
-
-                if escaped_path:
-                    completion = completion.replace(' ', '\\ ')
-
-                text = ''
-
-                if os.path.isdir(fname):
-                    text = '%s/\tDir' % completion
-                else:
-                    text = '%s\tFile' % completion
-
-                # FIXME:
-                # this one is a bit weird
-                # for example if there are three files:
-                # /quick test
-                # /quick test 1
-                # /quick test 2
-                # and user types 'quick' and asks for compliction
-                # he will get all three choises, so far so good,
-                # if he selects the first one, everything is fine, but
-                # if he selects the second or third, the code completin will replace
-                # /quick quick test 1
-                # /quick quick test 2
-                # I guess the problem is that the first item in the tuple is
-                # what should be replaced, but it only works on words and
-                # space will break the word boundary
-
-                # last word that will be completed (is highlighted in the box)
-                # if the last charcated is a space then it will be the whole word
-                # from the last separator
-                lastword = path[path.rfind(sep)+1:]
-
-                # difference between the completion and the lastword
-                rest = '' 
-                
-                if path[-1] != ' ':
-                    lastword = lastword[lastword.rfind(' ')+1:]
-                    rest = completion[completion.find(lastword):]
-                else:
-                    rest = completion[completion.find(lastword)+len(lastword):]
-
-                if rest.find(' ') != -1:
-                    completion = rest
-
-                matches.append((text, completion))
+        activated = False
 
         return (matches, sublime.INHIBIT_WORD_COMPLETIONS)
 
+    def get_matches(self, path):
+        escaped_path = False if path.find('\\ ') == -1 else True
+
+        if escaped_path:
+            path = path.replace('\\ ',' ')
+
+        matches = []
+        for fname in iglob(path + '*'):
+            completion = os.path.basename(fname) 
+
+            if escaped_path:
+                completion = completion.replace(' ', '\\ ')
+
+            text = ''
+
+            if os.path.isdir(fname):
+                text = '%s/\tDir' % completion
+            else:
+                text = '%s\tFile' % completion
+
+            # FIXME:
+            # this one is a bit weird
+            # for example if there are three files:
+            # /quick test
+            # /quick test 1
+            # /quick test 2
+            # and user types 'quick' and asks for compliction
+            # he will get all three choises, so far so good,
+            # if he selects the first one, everything is fine, but
+            # if he selects the second or third, the code completin will replace
+            # /quick quick test 1
+            # /quick quick test 2
+            # I guess the problem is that the first item in the tuple is
+            # what should be replaced, but it only works on words and
+            # space will break the word boundary
+
+            # last word that will be completed (is highlighted in the box)
+            # if the last charcated is a space then it will be the whole word
+            # from the last separator
+            lastword = path[path.rfind(sep)+1:]
+
+            # difference between the completion and the lastword
+            rest = '' 
+            
+            if path[-1] != ' ':
+                lastword = lastword[lastword.rfind(' ')+1:]
+                rest = completion[completion.find(lastword):]
+            else:
+                rest = completion[completion.find(lastword)+len(lastword):]
+
+            if rest.find(' ') != -1:
+                completion = rest
+
+            matches.append((text, completion))
+
+        return matches
 
 if __name__ == "__main__":
     import doctest
