@@ -13,7 +13,10 @@ from itertools import takewhile
 #
 
 # http://vimdoc.sourceforge.net/htmldoc/options.html#'isfname'
-FNAME_CHARS =       ('/','\\','.','-','_','+',"'",'#','$','%','{','}','[',']',':','@','!','~','=')
+# no support for file names with quotes inside
+# this will be more difficult to implement as there should be 
+# some logic to find out if the file name is part of a quoted string
+FNAME_CHARS =       ('/','\\','.','-','_','+','#','$','%','{','}','[',']',':','@','!','~','=')
 WIN32_FNAME_CHARS = FNAME_CHARS + (',',)
 WIN32_ROOTS = re.compile('^[a-zA-Z]:[/\\\\]')
 MAX_FILE_LENGTH = 255
