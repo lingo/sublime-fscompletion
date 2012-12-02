@@ -1,0 +1,17 @@
+If I have a single directory test
+
+some text [test/]
+[ttext/] -- should not work
+[some test/] -- should work
+[some\ test/] -- should not work
+(test/)
+'test/'
+"test/"
+{"test/"}
+<'test/'>
+\input{some file}
+some spaces but last with\ space = with\ space
+
+~/
+/
+./
