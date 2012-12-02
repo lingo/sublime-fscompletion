@@ -6,127 +6,12 @@ import re
 import glob
 from os import sep
 from itertools import takewhile
+from fsutils import *
 
 # Enable SublimeText2 to complete filesystem paths a la VIM:
 # @author Luke Hudson <lukeletters@gmail.com>
 # @author Filip Krikava <krikava@gmail.com>
 #
-
-# http://vimdoc.sourceforge.net/htmldoc/options.html#'isfname'
-# no support for file names with quotes inside
-# this will be more difficult to implement as there should be 
-# some logic to find out if the file name is part of a quoted string
-FNAME_CHARS =       ('/','\\','.','-','_','+','#','$','%','{','}','[',']',':','@','!','~','=')
-WIN32_FNAME_CHARS = FNAME_CHARS + (',',)
-WIN32_ROOTS = re.compile('^[a-zA-Z]:[/\\\\]')
-MAX_FILE_LENGTH = 255
-
-def iglob(pattern):
-    def either(c):
-        return '[%s%s]'%(c.lower(),c.upper()) if c.isalpha() else c
-
-    # pattern = pattern.replace('\\\\ ',' ')
-    icase_pattern = ''.join(map(either,pattern))
-    return glob.iglob(icase_pattern)
-
-def isfname(ch):
-    chars = WIN32_FNAME_CHARS if os.name == 'nt' else FNAME_CHARS
-    return ch.isalnum() or (ch in chars)
-
-def hasroot(rpath):
-    """
-    >>> hasroot('/somepath')
-    True
-    >>> hasroot('C:/somepath')
-    True
-    >>> hasroot('C:\somepath')
-    True
-    >>> hasroot('~/somepath')
-    False
-    >>> hasroot('somepath')
-    False
-    """
-    return rpath.startswith('/') or \
-        WIN32_ROOTS.match(rpath) != None
-
-def isexplicitpath(rpath):
-    """
-    >>> isexplicitpath('/somepath')
-    True
-    >>> isexplicitpath('./somepath')
-    True
-    >>> isexplicitpath('~/somepath')
-    True
-    >>> isexplicitpath('C:/somepath')
-    True
-    >>> isexplicitpath('C:\somepath')
-    True
-    >>> isexplicitpath('somepath')
-    False
-    """
-    return hasroot(rpath) or \
-        rpath.startswith('~/') or \
-        rpath.startswith('./')
-
-def scanpath(string):
-    """
-    Return the longest sibstring of str that could be considered as a rpath.
-
-    >>> scanpath('/home')
-    '/home'
-    >>> scanpath('some text with /home')
-    '/home'
-    >>> scanpath('some text with filename\ with\ spaces')
-    'filename\\\\ with\\\\ spaces'
-    >>> scanpath('some text with filename with\ spaces')
-    'with\\\\ spaces'
-    >>> scanpath('some text with ./filename')
-    './filename'
-    >>> scanpath('some text with ./filename with spaces')
-    './filename with spaces'
-    >>> scanpath('some text with wrong filename')
-    'some text with wrong filename'
-    >>> scanpath('some text ~/Documents')
-    '~/Documents'
-    >>> scanpath('some text C:\Documents')
-    'C:\\\\Documents'
-    >>> scanpath('some text C:/Documents')
-    'C:/Documents'
-    >>> scanpath('some text C:/Documents\ and\ Settings/Directory')
-    'C:/Documents\\\\ and\\\\ Settings/Directory'
-    >>> scanpath('some text C:/Documents and Settings/Directory')
-    'C:/Documents and Settings/Directory'
-    """
-    rpath = ''
-    rstring = string[::-1]
-    lastsep = 0
-    escaped_path = False
-
-    for i,ch in enumerate(rstring):
-        if ch == sep: lastsep = i
-
-        if isfname(ch): 
-            rpath += ch
-        elif (ch == ' ' and i-lastsep <= MAX_FILE_LENGTH):                
-            if isexplicitpath(rpath[::-1]):
-                break
-
-            nch = rstring[i+1] if i+1 < len(rstring) else ''
-
-            if nch == '\\':
-                escaped_path = True
-            elif escaped_path:
-                # the current space is not escaped while others were
-                break
-
-            rpath += ch
-        else:
-            break
-
-    return rpath[::-1]
-
-def getviewcwd(view):
-    return os.path.dirname(view.file_name())
 
 activated = False
 
@@ -159,42 +44,52 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
 
         guessed_path = scanpath(lstr)
 
+        # if it is not obvious (part stars in a file system root) then we have
+        # to be explicitly activated
         if not activated and not isexplicitpath(guessed_path):
             return None
 
         # expand ~ if there is any
         guessed_path = os.path.expanduser(guessed_path)
 
-        # add current directory if is missing
+        # add current directory if it is missing
         if not hasroot(guessed_path):
             guessed_path = os.path.join(getviewcwd(view), guessed_path)
+        
+        # print "guessed_path:", guessed_path
 
-        matches = self.get_matches(guessed_path)
+        fuzzy_path = fuzzypath(guessed_path)
+        if not fuzzy_path:
+            return None
 
-        # if there are no matches this means that the path does not exists in
-        # latex for example one can do \input{$cur} where $cur is the cursor
-        # position. This will scan '\input{' as a guessed_path since it is
-        # really a valid path. The glob pattern however will not match anything
-        # and thus we need to add a new one that will simply $cwd/*
-        if not matches and activated:
-            matches = self.get_matches(getviewcwd(view)+sep)
+        # print "fuzzy_path:", fuzzy_path
+
+        matches = self.get_matches(fuzzy_path)
+
+        # # if there are no matches this means that the path does not exists in
+        # # latex for example one can do \input{$cur} where $cur is the cursor
+        # # position. This will scan '\input{' as a guessed_path since it is
+        # # really a valid path. The glob pattern however will not match anything
+        # # and thus we need to add a new one that will simply $cwd/*
+        # if not matches and activated:
+        #     matches = self.get_matches(getviewcwd(view)+sep)
 
         activated = False
 
         return (matches, sublime.INHIBIT_WORD_COMPLETIONS)
 
     def get_matches(self, path):
-        escaped_path = False if path.find('\\ ') == -1 else True
+        escaped_path = ispathescaped(path)
 
         if escaped_path:
-            path = path.replace('\\ ',' ')
+            path = remove_escape_spaces(path)
 
         matches = []
         for fname in iglob(path + '*'):
             completion = os.path.basename(fname) 
 
             if escaped_path:
-                completion = completion.replace(' ', '\\ ')
+                completion = escape_scapes(completion)
 
             text = ''
 
