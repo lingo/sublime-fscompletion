@@ -15,6 +15,9 @@ from fsutils import *
 
 activated = False
 
+def getviewcwd(view):
+    return os.path.dirname(view.file_name())
+
 class FileSystemCompTriggerCommand(sublime_plugin.TextCommand):
 
     def run(self, edit):
@@ -51,20 +54,21 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
 
         # expand ~ if there is any
         guessed_path = os.path.expanduser(guessed_path)
+        escaped_path = ispathescaped(guessed_path)
 
-        # add current directory if it is missing
-        if not hasroot(guessed_path):
-            guessed_path = os.path.join(getviewcwd(view), guessed_path)
-        
+        # view path
+        view_path = getviewcwd(view)
+
         # print "guessed_path:", guessed_path
+        # print "view_path:", view_path
 
-        fuzzy_path = fuzzypath(guessed_path)
+        fuzzy_path = fuzzypath(guessed_path, view_path)
         if not fuzzy_path:
             return None
 
         # print "fuzzy_path:", fuzzy_path
 
-        matches = self.get_matches(fuzzy_path)
+        matches = self.get_matches(fuzzy_path, escaped_path)
 
         # # if there are no matches this means that the path does not exists in
         # # latex for example one can do \input{$cur} where $cur is the cursor
@@ -78,14 +82,16 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
 
         return (matches, sublime.INHIBIT_WORD_COMPLETIONS)
 
-    def get_matches(self, path):
-        escaped_path = ispathescaped(path)
+    def get_matches(self, path, escaped_path):
 
         if escaped_path:
             path = remove_escape_spaces(path)
 
+        pattern = path + '*'
+        # print "pattern:", pattern
+
         matches = []
-        for fname in iglob(path + '*'):
+        for fname in iglob(pattern):
             completion = os.path.basename(fname) 
 
             if escaped_path:

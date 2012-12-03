@@ -15,8 +15,13 @@ def iglob(pattern):
     def either(c):
         return '[%s%s]'%(c.lower(),c.upper()) if c.isalpha() else c
 
-    # pattern = pattern.replace('\\\\ ',' ')
+    # escape glob pattern
+    pattern = pattern.replace('?','\?')
+    pattern = pattern.replace('[','\[')
+    pattern = pattern.replace(']','\]')
+
     icase_pattern = ''.join(map(either,pattern))
+    
     return glob.iglob(icase_pattern)
 
 def isfnamespec(ch):
@@ -192,7 +197,7 @@ def remove_escape_spaces(path):
 def escape_scapes(path):
     return path.replace(' ', '\\ ')
 
-def fuzzypath(path, aglob=iglob):
+def fuzzypath(path, cwd, aglob=iglob):
     """
     Tries to find the longest possible path that actually contains some elements
 
@@ -214,18 +219,23 @@ def fuzzypath(path, aglob=iglob):
     '/file'
     """
 
-    # if we start with root, try it as well
+    # add current directory if it is missing
+    if not hasroot(path):
+        path = os.path.join(cwd, path)
+        
+    # start with what we get
     bpath = remove_escape_spaces(path)
     if hasnext(aglob(bpath+'*')):
         return path
 
     for i in range(len(path)):
         ch = path[i]
-        if isfnamespec(ch) or ch == ' ':
+        if (isfnamespec(ch) and ch != sep) or ch == ' ':
             apath = path[i+1:] if i+1 < len(path) else path[i:]
+            apath = os.path.join(cwd, apath)
             # path without escapes - the one we want to check
             bpath = remove_escape_spaces(apath)
-            # print apath
+            # print bpath, list(aglob(bpath+'*'))
             if len(bpath) and hasnext(aglob(bpath+'*')):
                 return apath
 
