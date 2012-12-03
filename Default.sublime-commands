@@ -1,0 +1,6 @@
+[
+    {
+        "caption": "Autocomplete file name",
+        "command": "file_system_comp_trigger"
+    }
+]

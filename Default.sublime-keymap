@@ -1,0 +1,3 @@
+[
+	{ "keys": ["ctrl+x","ctrl+f"], "command": "file_system_comp_trigger"}
+]
