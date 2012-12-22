@@ -1,0 +1,21 @@
+## following should work
+some text[test\ with]
+[some test/]
+(test/)
+'test/'
+"test/"
+{"test/"}
+<'test/'>
+\input{some file}
+some spaces but last with\ space = with\ space
+~/
+/
+./
+
+## following should not work
+some text [test with spaces/file with spaces/]
+[ttext/] -- should not work
+
+## known issues
+# does work and should not - it guess the test/ to be a begin of a path which is wrong
+[some\ test/]
