@@ -42,7 +42,7 @@ def getviewcwd(view):
             try:
                 folder = window.folders().pop()
                 #print ("getviewcwd: folder found", folder)
-                cwd = folder.path
+                cwd = folder
             except AttributeError:
                 #print ("getviewcwd: folders() not found, or was empty list")
                 pass
