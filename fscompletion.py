@@ -31,7 +31,7 @@ class FileSystemCompTriggerCommand(sublime_plugin.TextCommand):
         global activated
         view = self.view
 
-        activated = True        
+        activated = True
 
         view.run_command('auto_complete',
             {'disable_auto_insert': True,
@@ -39,7 +39,8 @@ class FileSystemCompTriggerCommand(sublime_plugin.TextCommand):
 
 class FileSystemCompCommand(sublime_plugin.EventListener):
     """
-    Enable SublimeText2 to complete filesystem paths a la VIM:
+    Enable SublimeText2 to complete
+    filesystem paths a la VIM:
     """
 
     def on_query_completions(self, view, prefix, locations):
@@ -54,7 +55,7 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
 
         guessed_path = scanpath(lstr)
 
-        # if it is not obvious (part stars in a file system root) then we have
+        # If it is not obvious (part starts in a file system root) then we have
         # to be explicitly activated
         if not activated and not isexplicitpath(guessed_path):
             return None
@@ -99,7 +100,7 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
 
         matches = []
         for fname in iglob(pattern):
-            completion = os.path.basename(fname) 
+            completion = os.path.basename(fname)
 
             if escaped_path:
                 completion = escape_scapes(completion)
@@ -133,8 +134,8 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
             lastword = path[path.rfind(sep)+1:]
 
             # difference between the completion and the lastword
-            rest = '' 
-            
+            rest = ''
+
             if path[-1] != ' ':
                 lastword = lastword[lastword.rfind(' ')+1:]
                 rest = completion[completion.find(lastword):]
