@@ -23,7 +23,33 @@ else:
 activated = False
 
 def getviewcwd(view):
-    return os.path.dirname(view.file_name())
+    default = '/' ## What to return if nothing else found
+    cwd     = view.file_name() ## Try to get the current view's filename
+    if cwd == None:
+        cwd = default
+        #print ("getviewcwd: No view filename found")
+        ## File is not saved to disk, look for project dir
+        window = sublime.active_window()
+        if window == None:
+            #print ("getviewcwd: No active window found")
+            return cwd ## Give up here if we can't even get an active window!
+        try:
+            folder = window.project_data()['folders'].pop()
+            #print ("getviewcwd: folder found", folder)
+            cwd = folder['path']
+        except AttributeError:
+            #print ("getviewcwd: project_data not found, or no folders found in data")
+            try:
+                folder = window.folders().pop()
+                #print ("getviewcwd: folder found", folder)
+                cwd = folder.path
+            except AttributeError:
+                #print ("getviewcwd: folders() not found, or was empty list")
+                pass
+        #print ("getviewcwd: returning cwd", cwd)
+        return cwd
+    else:
+        return os.path.dirname(cwd)
 
 class FileSystemCompTriggerCommand(sublime_plugin.TextCommand):
 
