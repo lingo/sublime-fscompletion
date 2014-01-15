@@ -6,7 +6,14 @@ import re
 import glob
 from os import sep
 from itertools import takewhile
-from fsutils import *
+
+if sublime.version() < '3000':
+    # we are on ST2 and Python 2.X
+    _ST3 = False
+    from fsutils import *
+else:
+    _ST3 = True
+    from .fsutils import *
 
 # Enable SublimeText2 to complete filesystem paths a la VIM:
 # @author Luke Hudson <lukeletters@gmail.com>
