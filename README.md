@@ -2,7 +2,11 @@
 
 Enable auto-completion of paths from the file system à la [VIM](http://vimdoc.sourceforge.net/htmldoc/insert.html#i_CTRL-X_CTRL-F).
 
-Depending on the path, the file completion can be trigged automatically using the default `Ctrl-Space` auto-completion or it can be explicitly triggered by `Ctrl-x, Ctrl-f` shortcut. This can be always rebound to a different key combination. This plugin handles spaces in file names and find the correct file path beginning. If you find any problem, please open an issue.
+Depending on the path, the file completion can be trigged automatically using the default `Ctrl-Space` auto-completion or it can be explicitly triggered by `Ctrl+Alt+/` (on OSX, `Command` instead of control) shortcut. 
+
+This combination can be always rebound to a different key combination in usual SublimeText manner, by opening the User keybindings file (see menu: `Preferences/Package Settings/FileSystem Autocompletion`). 
+
+This plugin handles spaces in file names and find the correct file path beginning. If you find any problem, please open an issue.
 
 ## Installation ##
 Either by using the package manager or manually by cloning/downloading the latest snapshot of the `master` branch into the Sublime's package folder (e.g. `~/Library/Application Support/Sublime Text 2/Packages/` on OSX).

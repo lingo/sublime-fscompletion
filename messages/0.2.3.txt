@@ -1,0 +1,13 @@
+# FileSystem Autocompletion #
+
+Please note the default keybinding has changed to `Ctrl+Alt+/`.
+You may modify this by editing the user keybinding file.
+
+See menu: Preferences/Package Settings/FileSystem Autocompletion
+
+Copy the definition from the Default keybinding file and paste into the User
+keybinding file, then change the keysequence.
+
+For more information about the package, see:
+
+GitHub: http://github.com/lingo/sublime-fscompletion
