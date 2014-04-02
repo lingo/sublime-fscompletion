@@ -1,0 +1,9 @@
+# FileSystem Autocompletion #
+
+Changes:
+
+* directory completions automatically add a trailing slash
+
+For more information about the package, see:
+
+GitHub: http://github.com/lingo/sublime-fscompletion
