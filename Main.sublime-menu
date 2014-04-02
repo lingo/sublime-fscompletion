@@ -59,6 +59,20 @@
 									"platform": "Windows"
 								},
 								"caption": "Key Bindings – User"
+							},
+							{
+								"command": "open_file",
+								"args": {
+									"file": "${packages}/FileSystem Autocompletion/FilesystemAutocompletion.sublime-settings"
+								},
+								"caption": "Settings - Default"
+							},
+							{
+								"command": "open_file",
+								"args": {
+									"file": "${packages}/User/FilesystemAutocompletion.sublime-settings"
+								},
+								"caption": "Settings - User"
 							}
 						]
 					}

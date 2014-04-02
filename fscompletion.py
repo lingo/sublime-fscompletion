@@ -20,6 +20,13 @@ else:
 # @author Filip Krikava <krikava@gmail.com>
 #
 
+settings = sublime.load_settings('FilesystemAutocompletion.sublime-settings')
+debug    = settings.get('debug', False)
+
+# Force generation of User settings file
+settings.set('debug', debug)
+settings.set('add_slash', settings.get('add_slash'))
+
 activated = False
 
 def getviewcwd(view):
