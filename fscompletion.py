@@ -34,26 +34,33 @@ def getviewcwd(view):
     cwd     = view.file_name() ## Try to get the current view's filename
     if cwd == None:
         cwd = default
-        #print ("getviewcwd: No view filename found")
+        if debug:
+            print("FSAutocompletion: getviewcwd: No view filename found")
         ## File is not saved to disk, look for project dir
         window = sublime.active_window()
         if window == None:
-            #print ("getviewcwd: No active window found")
+            if debug:
+                print("FSAutocompletion: getviewcwd: No active window found")
             return cwd ## Give up here if we can't even get an active window!
         try:
             folder = window.project_data()['folders'].pop()
-            #print ("getviewcwd: folder found", folder)
+            if debug:
+                print("FSAutocompletion: getviewcwd: folder found", folder)
             cwd = folder['path']
         except AttributeError:
-            #print ("getviewcwd: project_data not found, or no folders found in data")
+            if debug:
+                print("FSAutocompletion: getviewcwd: project_data not found, or no folders found in data")
             try:
                 folder = window.folders().pop()
-                #print ("getviewcwd: folder found", folder)
+                if debug:
+                    print("FSAutocompletion: getviewcwd: folder found", folder)
                 cwd = folder.path
             except AttributeError:
-                #print ("getviewcwd: folders() not found, or was empty list")
+                if debug:
+                    print("FSAutocompletion: getviewcwd: folders() not found, or was empty list")
                 pass
-        #print ("getviewcwd: returning cwd", cwd)
+        if debug:
+            print("FSAutocompletion: getviewcwd: returning cwd", cwd)
         return cwd
     else:
         return os.path.dirname(cwd)
@@ -100,14 +107,17 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
         # view path
         view_path = getviewcwd(view)
 
-        # print "guessed_path:", guessed_path
-        # print "view_path:", view_path
+        if debug:
+            print ("FSAutocompletion: guessed_path:", guessed_path)
+        if debug:
+            print ("FSAutocompletion: view_path:", view_path)
 
         fuzzy_path = fuzzypath(guessed_path, view_path)
         if not fuzzy_path:
             return None
 
-        # print "fuzzy_path:", fuzzy_path
+        if debug:
+            print ("FSAutocompletion: fuzzy_path:", fuzzy_path)
 
         matches = self.get_matches(fuzzy_path, escaped_path)
 
@@ -129,7 +139,8 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
             path = remove_escape_spaces(path)
 
         pattern = path + '*'
-        # print "pattern:", pattern
+        if debug:
+            print ("FSAutocompletion: pattern:", pattern)
 
         matches = []
         for fname in iglob(pattern):
