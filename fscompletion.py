@@ -135,6 +135,7 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
 
             if os.path.isdir(fname):
                 text = '%s/\tDir' % completion
+                completion = completion + '/' # Append the slash for dirs
             else:
                 text = '%s\tFile' % completion
 
