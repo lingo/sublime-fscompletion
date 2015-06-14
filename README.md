@@ -2,7 +2,7 @@
 
 Enable auto-completion of paths from the file system à la [VIM](http://vimdoc.sourceforge.net/htmldoc/insert.html#i_CTRL-X_CTRL-F).
 
-Depending on the path, the file completion can be trigged automatically using the default `Ctrl-Space` auto-completion or it can be explicitly triggered by `Ctrl+Alt+/` (on OSX, `Command` instead of control) shortcut. 
+Depending on the path, the file completion can be trigged automatically using the default <kbd>Ctrl</kbd>+<kbd>Space</kbd> auto-completion or it can be explicitly triggered by <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>/</kbd> (on OSX, <kbd>Cmd</kbd> instead of <kbd>Ctrl</kbd>) shortcut. 
 
 This combination can be always rebound to a different key combination in usual SublimeText manner, by opening the User keybindings file (see menu: `Preferences/Package Settings/FileSystem Autocompletion`). 
 
@@ -17,7 +17,7 @@ If the path has a root, this means it starts with `./`, `~/`, `/` (or `C:\` (`C:
 
 ## Triggered file auto-completion ##
 
-For relative paths, the file path auto-completion can be triggered by hitting `Ctrl-x, Ctrl-f`. This is because we do not want to collide with the other auto-completion.
+For relative paths, the file path auto-completion can be triggered by hitting <kbd>Ctrl</kbd>+<kbd>X</kbd>, <kbd>Ctrl</kbd>+<kbd>F</kbd>. This is because we do not want to collide with the other auto-completion.
 
 ## Spaces ##
 
@@ -29,7 +29,7 @@ For example if there are three files:
     quick test 1
     quick test 2
 
-Then `quick test` followed by `Ctrl-x, Ctrl-f` will display all three options and when selecting the second one for instance it will get expanded to `quick test 1`. On the other hand `quick\ test` followed by `Ctrl-x, Ctrl-f` with the same selection will be expanded to `quick\ test\ 1`. If the path is detected to be escaped it will continue to escape all the followed spaces.
+Then `quick test` followed by <kbd>Ctrl</kbd>+<kbd>X</kbd>, <kbd>Ctrl</kbd>+<kbd>F</kbd> will display all three options and when selecting the second one for instance it will get expanded to `quick test 1`. On the other hand `quick\ test` followed by <kbd>Ctrl</kbd>+<kbd>X</kbd>, <kbd>Ctrl</kbd>+<kbd>F</kbd> with the same selection will be expanded to `quick\ test\ 1`. If the path is detected to be escaped it will continue to escape all the followed spaces.
 
 ## File path beginning ##
 
