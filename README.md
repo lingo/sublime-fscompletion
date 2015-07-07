@@ -6,7 +6,20 @@ Depending on the path, the file completion can be trigged automatically using th
 
 This combination can be always rebound to a different key combination in usual SublimeText manner, by opening the User keybindings file (see menu: `Preferences/Package Settings/FileSystem Autocompletion`). 
 
+For example, you should also be able to use the Vim shortcut <kbd>Ctrl</kbd>+<kbd>X</kbd>,<kbd>Ctrl</kbd>+<kbd>F</kbd> by adding the following to your **Keybindings - User** file:
+
+```json
+   { "keys": ["ctrl+x","ctrl+f"], "command": "file_system_comp_trigger"}
+```
+
 This plugin handles spaces in file names and find the correct file path beginning. If you find any problem, please open an issue.
+
+## Current directory ##
+The project-file directory will be used by default (if found).
+However, a path starting with '.' will use the current view's directory instead.
+The path search order can be configured via the usual settings file:
+
+    "path_search_order": ["project", "view", "window"]
 
 ## Installation ##
 Either by using the package manager or manually by cloning/downloading the latest snapshot of the `master` branch into the Sublime's package folder (e.g. `~/Library/Application Support/Sublime Text 2/Packages/` on OSX).
