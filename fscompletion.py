@@ -21,49 +21,76 @@ else:
 #
 
 settings = sublime.load_settings('FilesystemAutocompletion.sublime-settings')
-debug    = settings.get('debug', False)
+debug    = True #settings.get('debug', False)
 
 # Force generation of User settings file
 settings.set('debug', debug)
+settings.set('path_search_order', ['project', 'view', 'window'])
 settings.set('add_slash', settings.get('add_slash'))
 
 activated = False
 
-def getviewcwd(view):
-    default = '/' ## What to return if nothing else found
-    cwd     = view.file_name() ## Try to get the current view's filename
-    if cwd == None:
-        cwd = default
+def get_cwd_from_project(view, window):
+    cwd = None
+    try:
+        folder = window.project_data()['folders'].pop()
         if debug:
-            print("FSAutocompletion: getviewcwd: No view filename found")
-        ## File is not saved to disk, look for project dir
-        window = sublime.active_window()
-        if window == None:
-            if debug:
-                print("FSAutocompletion: getviewcwd: No active window found")
-            return cwd ## Give up here if we can't even get an active window!
-        try:
-            folder = window.project_data()['folders'].pop()
-            if debug:
-                print("FSAutocompletion: getviewcwd: folder found", folder)
-            cwd = folder['path']
-        except AttributeError:
-            if debug:
-                print("FSAutocompletion: getviewcwd: project_data not found, or no folders found in data")
-            try:
-                folder = window.folders().pop()
-                if debug:
-                    print("FSAutocompletion: getviewcwd: folder found", folder)
-                cwd = folder.path
-            except AttributeError:
-                if debug:
-                    print("FSAutocompletion: getviewcwd: folders() not found, or was empty list")
-                pass
-        if debug:
-            print("FSAutocompletion: getviewcwd: returning cwd", cwd)
-        return cwd
-    else:
+            print("FSAutocompletion: getviewcwd: folder found", folder)
+        cwd = folder['path']
+        if cwd == '.':
+            project = window.project_file_name()
+            cwd = os.path.dirname(project)
+        if cwd != '.' and cwd != None:
+            return cwd
+    except AttributeError:
+        pass
+    return None
+
+
+def get_cwd_from_view(view, window):
+    cwd = view.file_name()
+    if cwd != '.' and cwd != None:
         return os.path.dirname(cwd)
+    if debug:
+        print("FSAutocompletion: getviewcwd: No view filename found")
+    return None
+
+def get_cwd_from_window(view, window):
+    try:
+        folder = window.folders().pop()
+        cwd = folder.path
+        if cwd != '.' and cwd != None:
+            return cwd
+    except AttributeError:
+        if debug:
+            print("FSAutocompletion: getviewcwd: folders() not found, or was empty list")
+        pass
+    return None
+
+def get_search_functions():
+    default = [
+        get_cwd_from_project,
+        get_cwd_from_view,
+        get_cwd_from_window
+    ]
+    order = settings.get('path_search_order')
+    if order == None:
+        return default
+    out = []
+    for f in order:
+        out.append(globals()['get_cwd_from_%s' % (f)])
+    return out
+
+
+def getviewcwd(view):
+    default   = '/' ## What to return if nothing else found
+    window    = view.window()
+    functions = get_search_functions()
+    for func in functions:
+        cwd = func(view, window)
+        if cwd != None:
+            return cwd
+    return '.'
 
 class FileSystemCompTriggerCommand(sublime_plugin.TextCommand):
 
@@ -93,7 +120,12 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
         lstr = view.substr(line)
         lstr = lstr[0:rowcol[1]]
 
+        # view path
+        view_path = getviewcwd(view)
+
         guessed_path = scanpath(lstr)
+        if re.match(r'^\.', guessed_path):
+            view_path = get_cwd_from_view(view, view.window())
 
         # If it is not obvious (part starts in a file system root) then we have
         # to be explicitly activated
@@ -103,9 +135,6 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
         # expand ~ if there is any
         guessed_path = os.path.expanduser(guessed_path)
         escaped_path = ispathescaped(guessed_path)
-
-        # view path
-        view_path = getviewcwd(view)
 
         if debug:
             print ("FSAutocompletion: guessed_path:", guessed_path)
