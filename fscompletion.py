@@ -88,6 +88,8 @@ def getviewcwd(view):
     functions = get_search_functions()
     for func in functions:
         cwd = func(view, window)
+        if debug:
+            print("%s => %s" % (func, cwd))
         if cwd != None:
             return cwd
     return '.'
@@ -124,7 +126,7 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
         view_path = getviewcwd(view)
 
         guessed_path = scanpath(lstr)
-        if re.match(r'^\.', guessed_path):
+        if re.match(r'.*\.\/.*', guessed_path):
             view_path = get_cwd_from_view(view, view.window())
 
         # If it is not obvious (part starts in a file system root) then we have
