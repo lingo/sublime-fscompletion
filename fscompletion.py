@@ -33,9 +33,12 @@ activated = False
 def get_cwd_from_project(view, window):
     cwd = None
     try:
-        folder = window.project_data()['folders'].pop()
+        project_data = window.project_data()
+        if not project_data:
+            return None;
+        folder = project_data['folders'].pop()
         if debug:
-            print("FSAutocompletion: getviewcwd: folder found", folder)
+            print("FSAutocompletion: get_view_cwd: folder found", folder)
         cwd = folder['path']
         if cwd == '.':
             project = window.project_file_name()
@@ -52,7 +55,7 @@ def get_cwd_from_view(view, window):
     if cwd != '.' and cwd != None:
         return os.path.dirname(cwd)
     if debug:
-        print("FSAutocompletion: getviewcwd: No view filename found")
+        print("FSAutocompletion: get_view_cwd: No view filename found")
     return None
 
 def get_cwd_from_window(view, window):
@@ -63,7 +66,7 @@ def get_cwd_from_window(view, window):
             return cwd
     except AttributeError:
         if debug:
-            print("FSAutocompletion: getviewcwd: folders() not found, or was empty list")
+            print("FSAutocompletion: get_view_cwd: folders() not found, or was empty list")
         pass
     return None
 
@@ -82,17 +85,17 @@ def get_search_functions():
     return out
 
 
-def getviewcwd(view):
+def get_view_cwd(view):
     default   = '/' ## What to return if nothing else found
     window    = view.window()
     functions = get_search_functions()
     for func in functions:
         cwd = func(view, window)
         if debug:
-            print("%s => %s" % (func, cwd))
+            print("get_view_cwd: %s => %s" % (func, cwd))
         if cwd != None:
             return cwd
-    return '.'
+    return default
 
 class FileSystemCompTriggerCommand(sublime_plugin.TextCommand):
 
@@ -123,11 +126,13 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
         lstr = lstr[0:rowcol[1]]
 
         # view path
-        view_path = getviewcwd(view)
+        view_path = get_view_cwd(view)
 
         guessed_path = scanpath(lstr)
         if re.match(r'.*\.\/.*', guessed_path):
-            view_path = get_cwd_from_view(view, view.window())
+            file_path = get_cwd_from_view(view, view.window())
+            if file_path:
+                view_path = file_path
 
         # If it is not obvious (part starts in a file system root) then we have
         # to be explicitly activated
@@ -158,7 +163,7 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
         # # really a valid path. The glob pattern however will not match anything
         # # and thus we need to add a new one that will simply $cwd/*
         # if not matches and activated:
-        #     matches = self.get_matches(getviewcwd(view)+sep)
+        #     matches = self.get_matches(get_view_cwd(view)+sep)
 
         activated = False
 
