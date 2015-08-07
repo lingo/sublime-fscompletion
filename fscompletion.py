@@ -45,7 +45,7 @@ def get_cwd_from_project(view, window):
             cwd = os.path.dirname(project)
         if cwd != '.' and cwd != None:
             return cwd
-    except AttributeError:
+    except:
         pass
     return None
 
@@ -64,7 +64,7 @@ def get_cwd_from_window(view, window):
         cwd = folder.path
         if cwd != '.' and cwd != None:
             return cwd
-    except AttributeError:
+    except:
         if debug:
             print("FSAutocompletion: get_view_cwd: folders() not found, or was empty list")
         pass
