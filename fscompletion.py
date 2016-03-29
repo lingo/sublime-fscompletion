@@ -21,7 +21,7 @@ else:
 #
 
 settings = sublime.load_settings('FilesystemAutocompletion.sublime-settings')
-debug    = True #settings.get('debug', False)
+debug    = settings.get('debug', False)
 
 # Force generation of User settings file
 settings.set('debug', debug)
