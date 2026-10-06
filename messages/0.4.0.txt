@@ -1,0 +1,16 @@
+# FileSystem Autocompletion #
+
+After a looooong hiatus, some updates!
+Thanks to an issue submission by https://github.com/dpc00 I've revisited this long-abandoned plugin
+and made some changes
+
+Changes:
+
+* upgrade for Sublime Text 4
+* fix issue with windows paths https://github.com/lingo/sublime-fscompletion/issues/15
+* refactored code to be clearer
+* added automated testing
+
+For more information about the package, see:
+
+GitHub: http://github.com/lingo/sublime-fscompletion
