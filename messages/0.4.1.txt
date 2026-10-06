@@ -1,0 +1,9 @@
+# FileSystem Autocompletion #
+
+Changes:
+
+* mark desired python version 3.8 as per https://github.com/lingo/sublime-fscompletion/issues/19
+
+For more information about the package, see:
+
+GitHub: http://github.com/lingo/sublime-fscompletion
