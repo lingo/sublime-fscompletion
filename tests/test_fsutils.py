@@ -8,8 +8,8 @@ import fsutils
 
 class PathUtilityTests(unittest.TestCase):
     def test_hasnext_examples_from_legacy_comments(self):
-        self.assertTrue(fsutils.hasnext(iter([1, 2, 3])))
-        self.assertFalse(fsutils.hasnext(iter([])))
+        self.assertTrue(fsutils.has_next(iter([1, 2, 3])))
+        self.assertFalse(fsutils.has_next(iter([])))
 
     def test_hasroot_examples_from_legacy_comments(self):
         cases = {
@@ -21,7 +21,7 @@ class PathUtilityTests(unittest.TestCase):
         }
         for path, expected in cases.items():
             with self.subTest(path=path):
-                self.assertEqual(fsutils.hasroot(path), expected)
+                self.assertEqual(fsutils.has_root(path), expected)
 
     def test_isexplicitpath_examples_from_legacy_comments(self):
         cases = {
@@ -34,12 +34,12 @@ class PathUtilityTests(unittest.TestCase):
         }
         for path, expected in cases.items():
             with self.subTest(path=path):
-                self.assertEqual(fsutils.isexplicitpath(path), expected)
+                self.assertEqual(fsutils.is_explicit_path(path), expected)
 
     def test_explicit_paths_cover_supported_roots(self):
         for path in ('/tmp/file', 'C:/tmp/file', r'C:\\tmp\\file',
                      r'\\\\server\\share\\file', './file', '../file', '~'):
-            self.assertTrue(fsutils.isexplicitpath(path), path)
+            self.assertTrue(fsutils.is_explicit_path(path), path)
 
     def test_literal_glob_characters_are_not_wildcards(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -48,8 +48,8 @@ class PathUtilityTests(unittest.TestCase):
             open(literal, 'w').close()
             open(other, 'w').close()
             self.assertEqual(list(fsutils.iglob(literal)), [literal])
-            self.assertTrue(fsutils.isfname('*'))
-            self.assertTrue(fsutils.isfname('?'))
+            self.assertTrue(fsutils.is_fname('*'))
+            self.assertTrue(fsutils.is_fname('?'))
 
     def test_windows_drive_prefix_is_not_case_folded_in_glob_pattern(self):
         with mock.patch.object(fsutils.glob, 'iglob', return_value=iter(())) as iglob:
@@ -87,7 +87,7 @@ class PathUtilityTests(unittest.TestCase):
         }
         for path, expected in cases.items():
             with self.subTest(path=path):
-                self.assertEqual(fsutils.ispathescaped(path), expected)
+                self.assertEqual(fsutils.is_path_escaped(path), expected)
 
     def test_scanpath_examples_from_legacy_comments(self):
         cases = {

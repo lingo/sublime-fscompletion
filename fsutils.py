@@ -37,16 +37,16 @@ def iglob(prefix):
     return glob.iglob(_case_insensitive_literal_pattern(prefix) + '*')
 
 
-def isfnamespec(ch):
+def is_fname_char(ch):
     chars = WIN32_FNAME_CHARS if os.name == 'nt' else FNAME_CHARS
     return ch in chars
 
 
-def isfname(ch):
-    return ch.isalnum() or isfnamespec(ch)
+def is_fname(ch):
+    return ch.isalnum() or is_fname_char(ch)
 
 
-def hasnext(itr):
+def has_next(itr):
     try:
         next(itr)
         return True
@@ -54,7 +54,7 @@ def hasnext(itr):
         return False
 
 
-def hasroot(path):
+def has_root(path):
     """Whether *path* starts at a POSIX, drive, rooted-Windows, or UNC root."""
     return bool(path) and (
         path.startswith('/') or
@@ -64,12 +64,12 @@ def hasroot(path):
     )
 
 
-def isexplicitpath(path):
-    return hasroot(path) or path == '~' or path.startswith(('~/', '~\\', './',
+def is_explicit_path(path):
+    return has_root(path) or path == '~' or path.startswith(('~/', '~\\', './',
                                                              '.\\', '../', '..\\'))
 
 
-def ispathescaped(path):
+def is_path_escaped(path):
     """Return true only when every space in *path* is escaped with ``\\``."""
     has_spaces = False
     for index, char in enumerate(path):
@@ -86,35 +86,48 @@ def ispathescaped(path):
     return has_spaces
 
 
+def _is_escaped_space(reversed_text, space_index):
+    """Whether the space at *space_index* is preceded by an odd ``\\`` run."""
+    backslash_count = 0
+    for character in reversed_text[space_index + 1:]:
+        if character != '\\':
+            break
+        backslash_count += 1
+    return bool(backslash_count % 2)
+
+
 def scanpath(text):
-    """Return the path-like suffix of *text*."""
-    rpath = ''
-    reverse_text = text[::-1]
-    last_separator = 0
-    escaped_path = False
+    """Return the path-like suffix of *text*.
 
-    for index, char in enumerate(reverse_text):
-        if char in PATH_SEPARATORS:
-            last_separator = index
-        if isfname(char):
-            rpath += char
+    Scan backwards from the cursor so that completion receives only the final
+    path candidate.  An escaped space may be part of a relative path; ordinary
+    spaces are included only after an explicit path prefix has been found.
+    """
+    reversed_text = text[::-1]
+    reversed_path = []
+    nearest_separator = 0
+    found_escaped_space = False
+
+    for index, character in enumerate(reversed_text):
+        if character in PATH_SEPARATORS:
+            nearest_separator = index
+
+        if is_fname(character):
+            reversed_path.append(character)
             continue
-        if char != ' ' or index - last_separator > MAX_FILE_LENGTH:
+
+        if character != ' ' or index - nearest_separator > MAX_FILE_LENGTH:
             break
-        if isexplicitpath(rpath[::-1]):
+        if is_explicit_path(''.join(reversed(reversed_path))):
             break
 
-        slash_count = 0
-        cursor = index + 1
-        while cursor < len(reverse_text) and reverse_text[cursor] == '\\':
-            slash_count += 1
-            cursor += 1
-        if slash_count % 2:
-            escaped_path = True
-        elif escaped_path:
+        if _is_escaped_space(reversed_text, index):
+            found_escaped_space = True
+        elif found_escaped_space:
             break
-        rpath += char
-    return rpath[::-1]
+        reversed_path.append(character)
+
+    return ''.join(reversed(reversed_path))
 
 
 def remove_escape_spaces(path):
@@ -126,23 +139,23 @@ def escape_spaces(path):
 
 
 def _join_base(path, cwd):
-    return path if hasroot(path) else os.path.join(cwd, path)
+    return path if has_root(path) else os.path.join(cwd, path)
 
 
 def fuzzypath(path, cwd, aglob=iglob):
     """Find the longest path-like suffix that has filesystem matches."""
-    if not cwd and not hasroot(path):
+    if not cwd and not has_root(path):
         return None
     path = _join_base(path, cwd)
-    if hasnext(aglob(remove_escape_spaces(path))):
+    if has_next(aglob(remove_escape_spaces(path))):
         return path
 
     for index, char in enumerate(path):
-        if char == ' ' or (isfnamespec(char) and char not in PATH_SEPARATORS):
+        if char == ' ' or (is_fname_char(char) and char not in PATH_SEPARATORS):
             candidate = path[index + 1:]
             if not candidate:
                 continue
             candidate = _join_base(candidate, cwd)
-            if hasnext(aglob(remove_escape_spaces(candidate))):
+            if has_next(aglob(remove_escape_spaces(candidate))):
                 return candidate
     return None

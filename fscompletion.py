@@ -3,8 +3,8 @@ import os
 import sublime
 import sublime_plugin
 
-from .fsutils import (escape_spaces, fuzzypath, iglob, isexplicitpath,
-                      ispathescaped, remove_escape_spaces, scanpath)
+from .fsutils import (escape_spaces, fuzzypath, iglob, is_explicit_path,
+                      is_path_escaped, remove_escape_spaces, scanpath)
 
 
 SETTINGS_FILE = 'FilesystemAutocompletion.sublime-settings'
@@ -128,24 +128,28 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
         explicitly_activated = _consume_activation(view)
         location = locations[0]
         line = view.line(location)
+
         # Extract the whole line's text (prefix parameter above isn't enough)
         text = view.substr(sublime.Region(line.begin(), location))
+
         guessed_path = scanpath(text)
 
-        if not explicitly_activated and not isexplicitpath(guessed_path):
+        if not explicitly_activated and not is_explicit_path(guessed_path):
             return None
 
         view_path = get_view_cwd(view)
+
         if guessed_path.startswith(('./', '.\\')):
             view_path = get_cwd_from_view(view, view.window()) or view_path
 
         guessed_path = os.path.expanduser(guessed_path)
         _debug('guessed_path: %s', guessed_path)
         _debug('view_path: %s', view_path)
-        if not view_path and not isexplicitpath(guessed_path):
+
+        if not view_path and not is_explicit_path(guessed_path):
             return None
 
-        escaped_path = ispathescaped(guessed_path)
+        escaped_path = is_path_escaped(guessed_path)
         fuzzy_path = fuzzypath(guessed_path, view_path)
         if not fuzzy_path:
             return None
@@ -171,7 +175,8 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
                 completion = escape_spaces(completion)
             if os.path.isdir(filename):
                 trigger = '{}{}\tDir'.format(completion, separator)
-                inserted = completion + separator if _settings().get('add_slash', True) else completion
+                inserted = completion + separator if _settings().get('add_slash',
+                                                                     True) else completion
             else:
                 trigger = '{}\tFile'.format(completion)
                 inserted = completion
