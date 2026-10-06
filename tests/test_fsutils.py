@@ -1,6 +1,7 @@
 import os
 import tempfile
 import unittest
+from unittest import mock
 
 import fsutils
 
@@ -49,6 +50,22 @@ class PathUtilityTests(unittest.TestCase):
             self.assertEqual(list(fsutils.iglob(literal)), [literal])
             self.assertTrue(fsutils.isfname('*'))
             self.assertTrue(fsutils.isfname('?'))
+
+    def test_windows_drive_prefix_is_not_case_folded_in_glob_pattern(self):
+        with mock.patch.object(fsutils.glob, 'iglob', return_value=iter(())) as iglob:
+            list(fsutils.iglob('C:/Users/donal/pro'))
+
+        self.assertEqual(
+            iglob.call_args.args[0],
+            'C:/[uU][sS][eE][rR][sS]/[dD][oO][nN][aA][lL]/[pP][rR][oO]*')
+
+    def test_fuzzypath_keeps_an_absolute_drive_path(self):
+        requested = 'C:/Users/donal/pro'
+
+        def windows_glob(path):
+            return iter([path]) if path == requested else iter(())
+
+        self.assertEqual(fsutils.fuzzypath(requested, 'D:/fallback', windows_glob), requested)
 
     def test_fuzzypath_finds_path_suffix(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -13,9 +13,28 @@ _DRIVE_ROOT = re.compile(r'^[a-zA-Z]:[\\/]')
 _UNC_ROOT = re.compile(r'^(?:\\\\|//)[^\\/]+[\\/][^\\/]+')
 
 
+def _split_drive(path):
+    """Split a Windows drive even when this module is tested on another OS."""
+    drive, tail = os.path.splitdrive(path)
+    if not drive and _DRIVE_ROOT.match(path):
+        return path[:2], path[2:]
+    return drive, tail
+
+
+def _case_insensitive_literal_pattern(path):
+    drive, tail = _split_drive(path)
+    parts = []
+    for character in tail:
+        if character.isalpha():
+            parts.append('[{}{}]'.format(character.lower(), character.upper()))
+        else:
+            parts.append(glob.escape(character))
+    return drive + ''.join(parts)
+
+
 def iglob(prefix):
-    """Return literal-prefix matches for *prefix*, case-sensitively per OS."""
-    return glob.iglob(glob.escape(prefix) + '*')
+    """Return case-insensitive, literal-prefix matches without altering a drive."""
+    return glob.iglob(_case_insensitive_literal_pattern(prefix) + '*')
 
 
 def isfnamespec(ch):
