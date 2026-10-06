@@ -100,6 +100,15 @@ def completion_insert_text(path, completion):
     return completion
 
 
+def completion_separator(stub):
+    """Use the most recent separator the user typed, or the platform default."""
+    forward = stub.rfind('/')
+    backward = stub.rfind('\\') if os.name == 'nt' else -1
+    if forward == -1 and backward == -1:
+        return os.sep
+    return '/' if forward > backward else '\\'
+
+
 class FileSystemCompTriggerCommand(sublime_plugin.TextCommand):
     def run(self, edit):
         view_id = self.view.id()
@@ -141,10 +150,12 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
         if not fuzzy_path:
             return None
         _debug('fuzzy_path: %s', fuzzy_path)
-        return (self.get_matches(fuzzy_path, escaped_path),
+        return (self.get_matches(fuzzy_path, escaped_path,
+                                 completion_separator(guessed_path)),
                 sublime.INHIBIT_WORD_COMPLETIONS)
 
-    def get_matches(self, path, escaped_path):
+    def get_matches(self, path, escaped_path, separator=None):
+        separator = separator or completion_separator(path)
         lookup_path = remove_escape_spaces(path) if escaped_path else path
         _debug('pattern: %s*', lookup_path)
         entries = []
@@ -159,8 +170,8 @@ class FileSystemCompCommand(sublime_plugin.EventListener):
             if escaped_path:
                 completion = escape_spaces(completion)
             if os.path.isdir(filename):
-                trigger = '{} /\tDir'.format(completion)
-                inserted = completion + '/' if _settings().get('add_slash', True) else completion
+                trigger = '{}{}\tDir'.format(completion, separator)
+                inserted = completion + separator if _settings().get('add_slash', True) else completion
             else:
                 trigger = '{}\tFile'.format(completion)
                 inserted = completion

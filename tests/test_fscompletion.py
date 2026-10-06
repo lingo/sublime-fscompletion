@@ -6,6 +6,7 @@ import sys
 import tempfile
 import types
 import unittest
+from unittest import mock
 
 
 class FakeSettings(dict):
@@ -73,6 +74,25 @@ class CompletionTests(unittest.TestCase):
                 completion.completion_insert_text(
                     str(pathlib.Path(directory, 'quick test')), 'quick test 1'),
                 'test 1')
+
+    def test_directory_completion_preserves_windows_separator(self):
+        with tempfile.TemporaryDirectory() as directory:
+            pathlib.Path(directory, 'folder').mkdir()
+            matches = completion.FileSystemCompCommand().get_matches(
+                str(pathlib.Path(directory, 'fol')), escaped_path=False, separator='\\')
+
+        self.assertEqual(matches, [('folder\\\tDir', 'folder\\')])
+
+    def test_directory_completion_preserves_forward_slash(self):
+        self.assertEqual(completion.completion_separator('C:/Users/donal/pro'), '/')
+
+    def test_directory_completion_preserves_windows_backslash(self):
+        with mock.patch.object(completion.os, 'name', 'nt'):
+            self.assertEqual(completion.completion_separator(r'C:\Users\donal\pro'), '\\')
+
+    def test_directory_completion_uses_platform_separator_without_stub_separator(self):
+        with mock.patch.object(completion.os, 'sep', '\\'):
+            self.assertEqual(completion.completion_separator('pro'), '\\')
 
     def test_activation_is_view_scoped_and_one_shot(self):
         class View:
