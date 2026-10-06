@@ -1,5 +1,10 @@
 # FileSystem AutoCompletion #
 
+**Authors**: 
+
+- Luke Hudson <lukeletters@gmail.com>
+- Filip Krikava <krikava@gmail.com>
+
 Enable auto-completion of paths from the file system à la [VIM](http://vimdoc.sourceforge.net/htmldoc/insert.html#i_CTRL-X_CTRL-F).
 
 File completion can be explicitly triggered by <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>/</kbd> (on OSX, <kbd>Cmd</kbd> instead of <kbd>Ctrl</kbd>) shortcut. 
@@ -15,14 +20,19 @@ For example, you should also be able to use the Vim shortcut <kbd>Ctrl</kbd>+<kb
 This plugin handles spaces in file names and find the correct file path beginning. If you find any problem, please open an issue.
 
 ## Current directory ##
-The project-file directory will be used by default (if found).
-However, a path starting with '.' will use the current view's directory instead.
+The directory containing the project file is used by default. Unsaved files in
+windows without a project fall back to the first folder in the window. A path
+starting with `.` uses the current view's directory instead.
 The path search order can be configured via the usual settings file:
 
     "path_search_order": ["project", "view", "window"]
 
+Unknown values are ignored. If no configured source has a directory, relative
+paths do not produce filesystem completions.
+
 ## Installation ##
-Either by using the package manager or manually by cloning/downloading the latest snapshot of the `master` branch into the Sublime's package folder (e.g. `~/Library/Application Support/Sublime Text 3/Packages/` on OSX).
+Either use Package Control or clone/download the repository into Sublime Text's
+Packages directory as `sublime-fscompletion`.
 
 ## Spaces ##
 
