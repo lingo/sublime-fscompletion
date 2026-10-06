@@ -6,6 +6,35 @@ import fsutils
 
 
 class PathUtilityTests(unittest.TestCase):
+    def test_hasnext_examples_from_legacy_comments(self):
+        self.assertTrue(fsutils.hasnext(iter([1, 2, 3])))
+        self.assertFalse(fsutils.hasnext(iter([])))
+
+    def test_hasroot_examples_from_legacy_comments(self):
+        cases = {
+            '/somepath': True,
+            'C:/somepath': True,
+            r'C:\somepath': True,
+            '~/somepath': False,
+            'somepath': False,
+        }
+        for path, expected in cases.items():
+            with self.subTest(path=path):
+                self.assertEqual(fsutils.hasroot(path), expected)
+
+    def test_isexplicitpath_examples_from_legacy_comments(self):
+        cases = {
+            '/somepath': True,
+            './somepath': True,
+            '~/somepath': True,
+            'C:/somepath': True,
+            r'C:\somepath': True,
+            'somepath': False,
+        }
+        for path, expected in cases.items():
+            with self.subTest(path=path):
+                self.assertEqual(fsutils.isexplicitpath(path), expected)
+
     def test_explicit_paths_cover_supported_roots(self):
         for path in ('/tmp/file', 'C:/tmp/file', r'C:\\tmp\\file',
                      r'\\\\server\\share\\file', './file', '../file', '~'):
@@ -29,8 +58,61 @@ class PathUtilityTests(unittest.TestCase):
                              os.path.join(directory, 'target'))
 
     def test_escaped_space_detection(self):
-        self.assertTrue(fsutils.ispathescaped(r'a\ b\ c'))
-        self.assertFalse(fsutils.ispathescaped(r'a\ b c'))
+        cases = {
+            r'\\ catch': False,
+            r'\\\ nocatch': True,
+            r'\ \ \ space\ \ escaped': True,
+            '': False,
+            'string': False,
+            r'simple\ escape': True,
+            'simple nonescape': False,
+            r'almost\ all\ spaces escaped': False,
+        }
+        for path, expected in cases.items():
+            with self.subTest(path=path):
+                self.assertEqual(fsutils.ispathescaped(path), expected)
+
+    def test_scanpath_examples_from_legacy_comments(self):
+        cases = {
+            r'with spaces\\\\ home': r'with spaces\\\\ home',
+            r'with spaces\\\\\ home': r'spaces\\\\\ home',
+            '/home': '/home',
+            'some text with /home': '/home',
+            r'some text with filename\ with\ spaces': r'filename\ with\ spaces',
+            r'some text with filename with\ spaces': r'with\ spaces',
+            r'some\ text with spaces': r'some\ text with spaces',
+            'some text with ./filename': './filename',
+            'some text with ./filename with spaces': './filename with spaces',
+            'some text with wrong filename': 'some text with wrong filename',
+            'some text ~/Documents': '~/Documents',
+            r'some text C:\Documents': r'C:\Documents',
+            'some text C:/Documents': 'C:/Documents',
+            r'some text C:/Documents\ and\ Settings/Directory': r'C:/Documents\ and\ Settings/Directory',
+            'some text C:/Documents and Settings/Directory': 'C:/Documents and Settings/Directory',
+        }
+        for text, expected in cases.items():
+            with self.subTest(text=text):
+                self.assertEqual(fsutils.scanpath(text), expected)
+
+    def test_fuzzypath_examples_from_legacy_comments(self):
+        base = '/base'
+
+        def matcher(*matches):
+            return lambda path: iter([path]) if path in matches else iter([])
+
+        cases = (
+            ('some precceding test[[[[test', matcher('/base/test'), '/base/test'),
+            ('[test', matcher('/base/test'), '/base/test'),
+            ('[ttest', matcher('/base/test'), None),
+            ('[some text ttest', matcher('/base/test'), None),
+            ('[some text test', matcher('/base/test'), '/base/test'),
+            ('[/', matcher('/'), '/'),
+            ('/', matcher('/'), '/'),
+            ('/file', matcher('/file'), '/file'),
+        )
+        for path, fake_glob, expected in cases:
+            with self.subTest(path=path):
+                self.assertEqual(fsutils.fuzzypath(path, base, fake_glob), expected)
 
 
 if __name__ == '__main__':

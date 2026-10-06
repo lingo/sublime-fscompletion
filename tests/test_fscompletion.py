@@ -3,6 +3,7 @@ import importlib.util
 import io
 import pathlib
 import sys
+import tempfile
 import types
 import unittest
 
@@ -57,6 +58,21 @@ class CompletionTests(unittest.TestCase):
     def test_space_completion_replaces_only_the_final_word(self):
         self.assertEqual(completion.completion_insert_text('/tmp/quick test', 'quick test 1'), 'test 1')
         self.assertEqual(completion.completion_insert_text('/tmp/quick\\ test', 'quick\\ test\\ 1'), 'test\\ 1')
+
+    def test_three_file_space_completion_scenario_from_legacy_comment(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for name in ('quick test', 'quick test 1', 'quick test 2'):
+                pathlib.Path(directory, name).touch()
+
+            matches = completion.FileSystemCompCommand().get_matches(
+                str(pathlib.Path(directory, 'quick')), escaped_path=False)
+            inserted = [contents for _, contents in matches]
+
+            self.assertEqual(inserted, ['quick test', 'quick test 1', 'quick test 2'])
+            self.assertEqual(
+                completion.completion_insert_text(
+                    str(pathlib.Path(directory, 'quick test')), 'quick test 1'),
+                'test 1')
 
     def test_activation_is_view_scoped_and_one_shot(self):
         class View:
